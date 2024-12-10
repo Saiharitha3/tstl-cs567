@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from product.inventory import Product, Customer, Supplier, Warehouse, Inventory, Report
+from inventory import Product, Customer, Supplier, Warehouse, Inventory, Report
 
 
 class TestInventorySystem(unittest.TestCase):
