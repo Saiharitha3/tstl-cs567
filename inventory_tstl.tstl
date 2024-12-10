@@ -1,0 +1,123 @@
+# Import TSTL modules
+from tstl import tester
+
+# Define actions for the Inventory Management System
+tester.addAction('add_supplier', args=["name", "address"])
+tester.addAction('add_warehouse', args=["name", "location"])
+tester.addAction('add_product', args=["name", "category", "price", "quantity", "description", "supplier_name", "warehouse_name"])
+tester.addAction('update_product_price', args=["product_name", "new_price"])
+tester.addAction('update_product_quantity', args=["product_name", "new_quantity"])
+tester.addAction('make_sale', args=["customer_name", "product_name", "quantity"])
+tester.addAction('remove_product', args=["product_name"])
+tester.addAction('generate_inventory_report', args=[])
+tester.addAction('generate_sales_report', args=[])
+tester.addAction('add_review', args=["product_name", "review"])
+tester.addAction('apply_discount', args=["product_name", "discount_percentage"])
+tester.addAction('display_inventory', args=["warehouse_name"])
+tester.addAction('display_customer_purchases', args=["customer_name"])
+tester.addAction('display_product_reviews', args=["product_name"])
+
+# Define property-based tests
+
+# Test: Adding and removing a product
+tester.addTest(
+    "Property - Add and Remove Product",
+    """
+    precondition: not inventory.has_product("TestProduct")
+    actions:
+        inventory.add_product("TestProduct", "TestCategory", 100, 10, "TestDescription", "TestSupplier", "TestWarehouse")
+    postcondition: inventory.has_product("TestProduct")
+    teardown:
+        inventory.remove_product("TestProduct")
+    """
+)
+
+# Test: Updating a product's price
+tester.addTest(
+    "Property - Update Product Price",
+    """
+    precondition: inventory.has_product("Laptop")
+    actions:
+        inventory.update_product_price("Laptop", 1200)
+    postcondition: inventory.products["Laptop"].price == 1200
+    """
+)
+
+# Test: Handling product sales
+tester.addTest(
+    "Property - Handle Sales",
+    """
+    precondition: inventory.products["Laptop"].quantity >= 5
+    actions:
+        inventory.make_sale("Alice", "Laptop", 3)
+    postcondition: inventory.products["Laptop"].quantity == initial_quantity - 3
+    teardown:
+        inventory.update_product_quantity("Laptop", initial_quantity)
+    """
+)
+
+# Test: Applying discounts to products
+tester.addTest(
+    "Property - Apply Discount",
+    """
+    precondition: inventory.has_product("Smartphone")
+    actions:
+        inventory.apply_discount("Smartphone", 20)
+    postcondition: inventory.products["Smartphone"].price == initial_price * 0.8
+    teardown:
+        inventory.update_product_price("Smartphone", initial_price)
+    """
+)
+
+# Test: Adding product reviews
+tester.addTest(
+    "Property - Add Review",
+    """
+    precondition: inventory.has_product("Tablet")
+    actions:
+        inventory.add_review("Tablet", "Excellent product!")
+    postcondition: "Excellent product!" in inventory.products["Tablet"].reviews
+    """
+)
+
+# Test: Display inventory by warehouse
+tester.addTest(
+    "Property - Display Inventory",
+    """
+    precondition: inventory.has_warehouse("MainWarehouse")
+    actions:
+        inventory.display_inventory("MainWarehouse")
+    postcondition: isinstance(output, list) and all(item in inventory.products for item in output)
+    """
+)
+
+# Test: Generate inventory report
+tester.addTest(
+    "Property - Generate Inventory Report",
+    """
+    actions:
+        inventory.generate_inventory_report()
+    postcondition: isinstance(output, str) and "Inventory Report" in output
+    """
+)
+
+# Test: Generate sales report
+tester.addTest(
+    "Property - Generate Sales Report",
+    """
+    actions:
+        inventory.generate_sales_report()
+    postcondition: isinstance(output, str) and "Sales Report" in output
+    """
+)
+
+# Test: Customer purchase records
+tester.addTest(
+    "Property - Display Customer Purchases",
+    """
+    precondition: inventory.has_customer("Bob")
+    actions:
+        inventory.display_customer_purchases("Bob")
+    postcondition: isinstance(output, list) and all(isinstance(purchase, dict) for purchase in output)
+    """
+)
